@@ -1,0 +1,27 @@
+name: systematic-tracker
+
+services:
+  app:
+    container_name: systematic-tracker-app
+    image: systematic-tracker-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_CONVEX_URL: ${NEXT_PUBLIC_CONVEX_URL:-}
+        NEXT_PUBLIC_LOCAL_USER_NAME: ${NEXT_PUBLIC_LOCAL_USER_NAME:-Systematic Tracker}
+        NEXT_PUBLIC_LOCAL_USER_EMAIL: ${NEXT_PUBLIC_LOCAL_USER_EMAIL:-local@systematic-tracker.dev}
+    env_file:
+      - .env.local
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      DOCKER_ENV: "true"
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL_DOCKER:-http://host.docker.internal:11434}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    shm_size: "1gb"
+    ports:
+      - "3000:3000"
+    restart: unless-stopped

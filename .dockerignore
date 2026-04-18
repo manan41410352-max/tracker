@@ -1,0 +1,13 @@
+.git
+.next
+.next-dev
+coverage
+dist
+node_modules
+Dockerfile*
+README1.md
+run.txt
+.env
+.env.*
+!.env.example
+npm-debug.log*

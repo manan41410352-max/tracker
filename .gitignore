@@ -1,0 +1,19 @@
+node_modules
+.env
+.env.local
+.next
+.next-dev
+.venv
+dist
+coverage
+.vscode
+vendor/models/
+logs/
+*.tsbuildinfo
+.tracker-dev*.log
+response.tmp.json
+__pycache__/
+*.pyc
+
+# clerk configuration (can include secrets)
+/.clerk/
