@@ -1481,6 +1481,7 @@ export async function runAgentNode(
     const openAIReady = isOpenAIConfigured();
     console.log(`[timetable-debug] isOpenAIConfigured=${openAIReady}`);
 
+    // ── Path A: OpenAI API ────────────────────────────────────────────────
     if (openAIReady) {
       const pdfCtx = String(ensureObject(state.reusableMemory)["workflow_pdf_context"] || "").trim();
       const openAiPrompt = [
@@ -1510,7 +1511,29 @@ export async function runAgentNode(
         }
       } catch (err) {
         console.error(`[timetable-debug] OpenAI threw:`, err);
-        // fall through to Ollama loop
+      }
+    }
+
+    // ── Path B: Qwen 14b direct JSON generation (fallback) ────────────────
+    if (!finalText) {
+      console.log(`[timetable-debug] OpenAI path did not produce output — trying Qwen direct JSON generation`);
+      const pdfCtx = String(ensureObject(state.reusableMemory)["workflow_pdf_context"] || "").trim();
+      const qwenPrompt = [
+        settings.instruction || "Create a comprehensive timetable plan for today based on the workflow state below.",
+        settings.schema ? `Return ONLY a single valid JSON object matching this schema. No thinking, no prose, no markdown:\n${settings.schema}` : "",
+        `Workflow state:\n${summarizeStateForPrompt(state, false)}`,
+        pdfCtx ? `Additional context:\n${pdfCtx.slice(0, 4000)}` : "",
+      ].filter(Boolean).join("\n\n");
+
+      try {
+        const qwenResult = await ollamaGenerateJson(qwenPrompt, preferredModel);
+        console.log(`[timetable-debug] Qwen direct result length=${qwenResult?.length ?? 0} head=${String(qwenResult || "").slice(0, 100)}`);
+        if (qwenResult?.trim()) {
+          finalText = qwenResult.trim();
+        }
+      } catch (err) {
+        console.error(`[timetable-debug] Qwen direct generation threw:`, err);
+        // fall through to the standard 8-step Ollama agent loop
       }
     }
   }
